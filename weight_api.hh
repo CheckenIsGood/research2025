@@ -1,5 +1,5 @@
-#ifndef CHICKADEE_K_APIC_HH
-#define CHICKADEE_K_APIC_HH
+#ifndef WEIGHT_API_HH
+#define WEIGHT_API_HH
 
 #include <torch/torch.h>
 #include <cstdint>
