@@ -6,7 +6,7 @@ LIBTORCH_PATH = /mnt/c/Users/Stephen/libtorch-cxx11-abi-shared-with-deps-2.7.1+c
 
 INCLUDES = -I$(LIBTORCH_PATH)/include -I$(LIBTORCH_PATH)/include/torch/csrc/api/include
 LDFLAGS = -L$(LIBTORCH_PATH)/lib
-LDLIBS = -ltorch -ltorch_cpu -lc10 -Wl,-rpath,$(LIBTORCH_PATH)/lib
+LDLIBS = -ltorch -lc10_cuda -ltorch_cuda -ltorch_cpu -lc10 -Wl,-rpath,$(LIBTORCH_PATH)/lib
 
 # Target executable
 TARGET = simple_resnet
