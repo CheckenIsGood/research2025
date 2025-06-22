@@ -90,7 +90,8 @@ int main() {
     model->eval();
 
     std::cout << "\n=== Model Weight Virtual Memory Addresses ===\n";
-    for (const auto& param : model->named_parameters()) {
+    for (const auto& param : model->named_parameters()) 
+    {
         void* addr = param.value().data_ptr();
         size_t size = param.value().numel() * param.value().element_size();
         std::cout << std::left << std::setw(30) << param.key()
