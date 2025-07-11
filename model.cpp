@@ -1,9 +1,11 @@
 #include <torch/torch.h>
 #include <iostream>
+#include <sys/ptrace.h>
 #include <iomanip>
 #include <fstream>
 #include <string>
 #include <unistd.h>
+#include <signal.h>
 
 struct ResidualBlockImpl : torch::nn::Module {
     torch::nn::Conv2d conv1{nullptr}, conv2{nullptr}, skip_conv{nullptr};
@@ -116,6 +118,9 @@ int main() {
 
     std::cout << "=== /proc/self/maps ===" << std::endl;
     print_proc_maps_with_pid(pid);
+
+    ptrace(PTRACE_TRACEME, 0, nullptr, nullptr);
+    raise(SIGSTOP); // Pause the process to allow external debugging
 
     return 0;
 }

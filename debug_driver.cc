@@ -1,4 +1,5 @@
 #include "weight_api.hh"
+#include <sys/ptrace.h>
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -29,9 +30,12 @@ int main() {
         return 1;
     }
 
-    std::cout << "[+] Attached to PID: " << pid << std::endl;
+    // if (!weight_debugger::attach(pid)) {
+    //     std::cerr << "Failed to attach to process with PID " << pid << std::endl;
+    //     return 1;
+    // }
 
-    sleep(1);  // Give the process some time to stabilize
+    std::cout << "[+] Attached to PID: " << pid << std::endl;
 
     std::cout << "=== /proc/self/maps ===" << std::endl;
     print_proc_maps_with_pid(pid);
@@ -60,7 +64,7 @@ int main() {
     
     std::vector<uint8_t> modified = original;
     modified[0] ^= 0xFF;  // Flip first byte
-    if (weight_debugger::poke(pid, addr, modified)) {
+    if (weight_debugger::poke(pid, addr, modified.data(), modified.size())) {
         std::cout << "[+] Poke succeeded. Modified first byte.\n";
     } else {
         std::cerr << "[-] Poke failed.\n";

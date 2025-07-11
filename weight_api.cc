@@ -13,7 +13,7 @@
 
 namespace weight_debugger {
 
-    static std::map<uintptr_t, std::string> weight_map_;
+    static std::map<std::string, WeightEntry> name_to_entry;
 
     bool attach(pid_t pid) {
         if (ptrace(PTRACE_ATTACH, pid, nullptr, nullptr) == -1) {
@@ -55,28 +55,69 @@ namespace weight_debugger {
         return buffer;
     }
 
-    bool poke(pid_t pid, uintptr_t addr, const std::vector<uint8_t>& bytes) {
+    
+    bool poke(pid_t pid, uintptr_t remote_addr, const void* local_src, size_t num_bytes) {
+        const uint8_t* src = reinterpret_cast<const uint8_t*>(local_src);
         size_t i = 0;
-        while (i < bytes.size()) {
-            uint64_t word = 0;
-            size_t chunk = std::min(sizeof(long), bytes.size() - i);
-            std::memcpy(&word, &bytes[i], chunk);
 
-            if (ptrace(PTRACE_POKEDATA, pid, addr + i, word) == -1) {
+        while (i < num_bytes) {
+            uint64_t word = 0;
+            size_t chunk = std::min(sizeof(long), num_bytes - i);
+            std::memcpy(&word, src + i, chunk);
+
+            if (ptrace(PTRACE_POKEDATA, pid, remote_addr + i, word) == -1) {
                 perror("ptrace poke");
                 return false;
             }
             i += chunk;
         }
+
         return true;
     }
 
-    void set_weight_map(const std::map<uintptr_t, std::string>& map) {
-        weight_map_ = map;
+    std::string dump_weights(pid_t pid) {
+        std::string flat;
+
+        for (const auto& [name, entry] : name_to_entry) {
+            std::vector<uint8_t> data = peek(pid, entry.address, entry.size);
+            flat.append(reinterpret_cast<const char*>(data.data()), data.size());
+        }
+
+        return flat;
     }
 
-    const std::map<uintptr_t, std::string>& weight_map() {
-        return weight_map_;
+    bool load_weights(pid_t pid, const void* flat, size_t size) {
+        const uint8_t* data = reinterpret_cast<const uint8_t*>(flat);
+        size_t offset = 0;
+
+        for (const auto& [name, entry] : name_to_entry) {
+            if (offset + entry.size > size) {
+                std::cerr << "Flat buffer too short for weight: " << name << std::endl;
+                return false;
+            }
+
+            const void* src = data + offset;
+            if (!poke(pid, entry.address, src, entry.size)) {
+                std::cerr << "Failed to poke weight: " << name << std::endl;
+                return false;
+            }
+
+            offset += entry.size;
+        }
+
+        if (offset != size) {
+            std::cerr << "Warning: unused bytes remain in flat buffer." << std::endl;
+        }
+
+        return 1;
+    }
+
+    void set_weight_map(const std::map<std::string, WeightEntry>& map) {
+        name_to_entry = map;
+    }
+
+    const std::map<std::string, WeightEntry>& weight_map() {
+        return name_to_entry;
     }
 
     pid_t launch() {
@@ -89,8 +130,7 @@ namespace weight_debugger {
         }
 
         if (child_pid == 0) {
-            // Child: request to be traced and exec the program
-            ptrace(PTRACE_TRACEME, 0, nullptr, nullptr);
+            // ptrace(PTRACE_TRACEME, 0, nullptr, nullptr);
             char* argv[] = { const_cast<char*>(program), nullptr };
             execvp(program, argv);
             perror("execvp"); // If exec fails

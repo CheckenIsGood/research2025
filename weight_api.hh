@@ -7,6 +7,11 @@
 #include <string>
 #include <vector>
 
+struct WeightEntry {
+    uintptr_t address;
+    size_t size;
+};
+
 namespace weight_debugger {
 
     // Launch a child process and attach to it using ptrace
@@ -22,11 +27,10 @@ namespace weight_debugger {
     std::vector<uint8_t> peek(pid_t pid, uintptr_t addr, size_t num_bytes);
 
     // Write memory to a traced process
-    bool poke(pid_t pid, uintptr_t addr, const std::vector<uint8_t>& bytes);
+    bool poke(pid_t pid, uintptr_t remote_addr, const void* local_src, size_t num_bytes);
 
-    // Optional: map from weight addresses to names
-    void set_weight_map(const std::map<uintptr_t, std::string>& map);
-    const std::map<uintptr_t, std::string>& weight_map();
+    void set_weight_map(const std::map<std::string, WeightEntry>& map);
+    const std::map<std::string, WeightEntry>& weight_map();
 
 }
 
