@@ -3,6 +3,23 @@
 #include <iomanip>
 #include <vector>
 #include <cstdint>
+#include <fstream>
+#include <string>
+#include <unistd.h> 
+
+void print_proc_maps_with_pid(pid_t pid) {
+    std::string path = "/proc/" + std::to_string(pid) + "/maps";
+    std::ifstream maps(path);
+    if (!maps) {
+        std::cerr << "Failed to open " << path << std::endl;
+        return;
+    }
+
+    std::string line;
+    while (std::getline(maps, line)) {
+        std::cout << line << std::endl;
+    }
+}
 
 int main() {
     // Launch and attach to the hardcoded model binary ("./simple_resnet")
@@ -14,6 +31,10 @@ int main() {
 
     std::cout << "[+] Attached to PID: " << pid << std::endl;
 
+    sleep(1);  // Give the process some time to stabilize
+
+    std::cout << "=== /proc/self/maps ===" << std::endl;
+    print_proc_maps_with_pid(pid);
     
     uintptr_t addr;
     std::string addr_input;

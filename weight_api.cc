@@ -11,21 +11,6 @@
 #include <fstream>
 #include <iomanip>
 
-
-void print_proc_maps_with_pid(pid_t pid) {
-    std::string path = "/proc/" + std::to_string(pid) + "/maps";
-    std::ifstream maps(path);
-    if (!maps) {
-        std::cerr << "Failed to open " << path << std::endl;
-        return;
-    }
-
-    std::string line;
-    while (std::getline(maps, line)) {
-        std::cout << line << std::endl;
-    }
-}
-
 namespace weight_debugger {
 
     static std::map<uintptr_t, std::string> weight_map_;
@@ -116,8 +101,6 @@ namespace weight_debugger {
             waitpid(child_pid, &status, 0);
             if (WIFSTOPPED(status)) {
                 std::cout << "Child " << child_pid << " stopped at exec. Ready for ptrace.\n";
-                std::cout << "=== /proc/self/maps ===" << std::endl;
-                print_proc_maps_with_pid(child_pid);
                 return child_pid;
             } else {
                 std::cerr << "Child did not stop correctly.\n";
