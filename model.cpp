@@ -83,6 +83,9 @@ void print_proc_maps_with_pid(pid_t pid) {
 int main() {
     std::cout << "CUDA available? " << torch::cuda::is_available() << std::endl;
     torch::Device device(torch::cuda::is_available() ? torch::kCUDA : torch::kCPU);
+
+
+
     // torch::Device device(torch::kCUDA);
     std::cout << "Using device: " << device << std::endl;
 

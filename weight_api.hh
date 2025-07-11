@@ -9,22 +9,23 @@
 
 namespace weight_debugger {
 
-    // Attach debugger to a model and cache named weight pointers
-    void attach(const torch::nn::Module& model);
+    // Launch a child process and attach to it using ptrace
+    pid_t launch();
 
-    // Read the value at a specific weight address
-    std::vector<uint8_t> peek(uintptr_t addr, size_t num_bytes);
+    // Attach to a running process
+    bool attach(pid_t pid);
 
-    // Overwrite weight memory with new data at a given address
-    void poke(uintptr_t addr, const std::vector<uint8_t>& bytes);
+    // Detach and resume the process
+    void detach(pid_t pid);
 
-    // Serialize all weights in the model into a flat byte buffer
-    std::vector<uint8_t> dump_weights();
+    // Read memory from a traced process
+    std::vector<uint8_t> peek(pid_t pid, uintptr_t addr, size_t num_bytes);
 
-    // Load weights from a flat byte buffer back into the model
-    void load_weights(const std::vector<uint8_t>& flat_bytes);
-    
-    // Map from address to weight name (for annotation)
+    // Write memory to a traced process
+    bool poke(pid_t pid, uintptr_t addr, const std::vector<uint8_t>& bytes);
+
+    // Optional: map from weight addresses to names
+    void set_weight_map(const std::map<uintptr_t, std::string>& map);
     const std::map<uintptr_t, std::string>& weight_map();
 
 }

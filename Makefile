@@ -8,14 +8,21 @@ INCLUDES = -I$(LIBTORCH_PATH)/include -I$(LIBTORCH_PATH)/include/torch/csrc/api/
 LDFLAGS = -L$(LIBTORCH_PATH)/lib
 LDLIBS = -ltorch -lc10_cuda -ltorch_cuda -ltorch_cpu -lc10 -Wl,-rpath,$(LIBTORCH_PATH)/lib
 
-# Target executable
-TARGET = simple_resnet
-SRC = model.cpp
+# Targets
+MODEL_TARGET = simple_resnet
+DEBUG_TARGET = debug_driver
 
-all: $(TARGET)
+# Source files
+MODEL_SRC = model.cpp
+DEBUG_SRC = debug_driver.cc weight_api.cc
 
-$(TARGET): $(SRC)
+all: $(MODEL_TARGET) $(DEBUG_TARGET)
+
+$(MODEL_TARGET): $(MODEL_SRC)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@ $(LDFLAGS) $(LDLIBS)
+
+$(DEBUG_TARGET): $(DEBUG_SRC)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@ $(LDFLAGS) $(LDLIBS)
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(MODEL_TARGET) $(DEBUG_TARGET)
